@@ -1,0 +1,7 @@
+package com.java.andesite.events;
+
+import android.view.View;
+
+public interface TodoOnClick {
+    void mainTodoOnclick(View view);
+}
