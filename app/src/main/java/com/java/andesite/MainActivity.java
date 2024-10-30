@@ -27,13 +27,14 @@ import com.java.andesite.db.SQLiteHelper;
 import com.java.andesite.events.OnSwipeListener;
 import com.java.andesite.events.TodoOnClick;
 import com.java.andesite.onCreate.Main;
+import com.java.andesite.vo.PageVO;
 import com.java.andesite.vo.TodoVO;
 
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements TodoOnClick, Main, OnSwipeListener {
     private SQLiteHelper sqLiteHelper;
-    private int num = 1;
+    public static PageVO pageVO;
     private boolean loading = false;
     private Add_Todo_Form customDialog;
     private Add_Todo_Form myDialogFragment;
@@ -54,11 +55,13 @@ public class MainActivity extends AppCompatActivity implements TodoOnClick, Main
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-
         myDialogFragment = new Add_Todo_Form(this);
         sqLiteHelper = new SQLiteHelper(this);
 
-        loadTodoList(num);
+        pageVO = new PageVO();
+        sqLiteHelper.getTodoList_sort_count(dateOrder, "desc", doneOrder);
+
+        loadTodoList(pageVO.getNowPage());
         title_mainOnCreate();
         setupSpinner();
         customDialog = new Add_Todo_Form(this);
@@ -69,7 +72,12 @@ public class MainActivity extends AppCompatActivity implements TodoOnClick, Main
         // 특정 뷰에 터치 리스너 설정
         View swipeView = findViewById(R.id.main_swipe_event); // 스와이프를 감지할 뷰의 ID
         swipeView.setOnTouchListener((v, event) -> gestureDetector.onTouchEvent(event));
+        myDialogFragment.setOnDismissListener(() -> {
+            loadTodoList(pageVO.getNowPage());
+            sqLiteHelper.getTodoList_sort_count(dateOrder, "desc", doneOrder);
+        });
     }
+    //====================================================================================
 
     private class GestureListener extends GestureDetector.SimpleOnGestureListener {
         private static final int SWIPE_THRESHOLD = 100;
@@ -95,32 +103,26 @@ public class MainActivity extends AppCompatActivity implements TodoOnClick, Main
 
     @Override
     public void onSwipeRight() {
-        if (num > 1) {
-            num--;
-            Log.e("information", String.valueOf(num));
+        if (pageVO.getNowPage() > 1) {
+            pageVO.setNowPage(pageVO.getNowPage() - 1);
+            Log.e("information", String.valueOf(pageVO.getNowPage()));
         } else {
             Toast.makeText(this, "첫번째 페이지 입니다", Toast.LENGTH_SHORT).show();
         }
-        loadTodoList(num);
+        loadTodoList(pageVO.getNowPage());
     }
 
     @Override
     public void onSwipeLeft() {
-        int page;
-        if(isDone_arrange == -2) {
-            page  = sqLiteHelper.getTodoList_sort_count_arranged();
-            Log.e("information", String.valueOf(page));
-        } else {
-            page = sqLiteHelper.getTodoList_sort_count(dateOrder, "desc", doneOrder);
-        }
-        if (page <= num * 5) {
+        if (pageVO.getTotalPage() <= pageVO.getNowPage() * 5) {
             Toast.makeText(this, "마지막 페이지입니다", Toast.LENGTH_SHORT).show();
         } else {
-            num++;
-            Log.e("information", String.valueOf(num));
-            loadTodoList(num);
+            pageVO.setNowPage(pageVO.getNowPage() + 1);
+            Log.e("information", String.valueOf(pageVO.getNowPage()));
+            loadTodoList(pageVO.getNowPage());
         }
     }
+    //====================================================================================
 
     private void loadTodoList(int pageNum) {
         list = sqLiteHelper.getTodoList_sort(pageNum, dateOrder, "desc", doneOrder, isDone_arrange);
@@ -164,9 +166,10 @@ public class MainActivity extends AppCompatActivity implements TodoOnClick, Main
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
-                num = 1;
+                pageVO.setNowPage(1);
                 dateOrder = position == 0 ? "asc" : "desc";
-                loadTodoList(num);
+                loadTodoList(pageVO.getNowPage());
+                sqLiteHelper.getTodoList_sort_count(dateOrder, "desc", doneOrder);
             }
 
             @Override
@@ -175,9 +178,10 @@ public class MainActivity extends AppCompatActivity implements TodoOnClick, Main
     }
 
     private void updateTodoList(ArrayList<TodoVO> list) {
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < pageVO.getNumPerPage(); i++) {
             if (i < list.size()) {
                 updateTodo(list.get(i), i);
+                ids[i] = String.valueOf(list.get(i).getId());
             } else {
                 hideCardView(i);
             }
@@ -223,17 +227,20 @@ public class MainActivity extends AppCompatActivity implements TodoOnClick, Main
         int index = Integer.parseInt(getResources().getResourceEntryName(checkBox.getId()).replace("main_done_checkbox", "")) - 1;
         int todoId = Integer.parseInt(ids[index]);
         sqLiteHelper.setDone(todoId, checkBox.isChecked() ? 1 : 0);
-        Toast.makeText(this, "done", Toast.LENGTH_SHORT).show();
+        pageVO.setNowPage(1);
+        loadTodoList(pageVO.getNowPage());
+        sqLiteHelper.getTodoList_sort_count(dateOrder, "desc", doneOrder);
     }
 
     @Override
     public void done_arrange_mainCheckBoxOnClick(View view) {
         CheckBox checkBox = (CheckBox) view;
         doneOrder = checkBox.isChecked() ? "done" : "notdone";
+        Log.e("error", "done_arrange_mainCheckBoxOnClick: "+checkBox.isChecked());
         isDone_arrange = checkBox.isChecked() ? -2 : 0;
-        Log.e("information", "done_arrange_mainCheckBoxOnClick: "+isDone_arrange);
 
-        num = 1;
-        loadTodoList(num); // 현재 페이지의 할 일 목록 로드
+        pageVO.setNowPage(1);
+        loadTodoList(pageVO.getNowPage());
+        pageVO.setTotalPage(sqLiteHelper.getTodoList_sort_count_arranged());
     }
 }

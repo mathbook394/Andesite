@@ -9,6 +9,8 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 
+import com.java.andesite.MainActivity;
+import com.java.andesite.onCreate.Main;
 import com.java.andesite.vo.TodoVO;
 
 import java.util.ArrayList;
@@ -21,7 +23,6 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     public SQLiteHelper(@Nullable Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
-
     @Override
     public void onCreate(SQLiteDatabase db) {
         createTable(db);
@@ -73,7 +74,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         return list;
     }
 
-    public int getTodoList_sort_count(String date_sort, String priority_sort, String done_sort) {
+    public void getTodoList_sort_count(String date_sort, String priority_sort, String done_sort) {
         int result = 0;
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = null;
@@ -84,16 +85,18 @@ public class SQLiteHelper extends SQLiteOpenHelper {
                     " WHERE done = " + (done_sort.equalsIgnoreCase("done") ? "1" : "0") +
                     " ORDER BY " + orderBy;
             cursor = db.rawQuery(sql, null);
-            result = cursor.getInt(0);
+            while(cursor.moveToNext()) {
+                result = cursor.getInt(0);
+            }
         } catch (Exception e) {
-            return -1;
+            Log.e("error", e.getMessage());
         } finally {
             if (cursor != null) {
                 cursor.close();
             }
             db.close();
         }
-        return result;
+        MainActivity.pageVO.setTotalPage(result);
     }
     public int getTodoList_sort_count_arranged() {
         int result;

@@ -37,6 +37,14 @@ public class Add_Todo_Form extends DialogFragment {
         this.context = context;
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (onDismissListener != null) {
+            onDismissListener.run(); // dismiss() 호출 시 리스너 실행
+        }
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -82,8 +90,8 @@ public class Add_Todo_Form extends DialogFragment {
         selectedDate.setTimeInMillis(selectedDateMillis);
         String formattedDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(selectedDate.getTime());
 
-        if(formTitle.isEmpty() || formContent.isEmpty()) {
-            Toast.makeText(context, "빈 값은 지정할 수 없습니다", Toast.LENGTH_SHORT).show();
+        if(formTitle.isEmpty()) {
+            Toast.makeText(context, "빈 제목은 지정할 수 없습니다", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -98,6 +106,7 @@ public class Add_Todo_Form extends DialogFragment {
             String sql = "INSERT INTO todo (title, content, date, time, priority, done) VALUES (?, ?, ?, 'time', ?, ?)";
             db.execSQL(sql, new String[]{vo.getTitle(), vo.getContent(), vo.getDate(), String.valueOf(vo.getPriority()), String.valueOf(vo.getDone())});
         }
+        MainActivity.pageVO.setTotalPage(MainActivity.pageVO.getTotalPage() + 1);
         this.dismiss();
     }
 }
