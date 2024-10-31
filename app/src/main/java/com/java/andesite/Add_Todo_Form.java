@@ -2,8 +2,10 @@ package com.java.andesite;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,6 +26,7 @@ import com.java.andesite.vo.TodoVO;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -64,7 +67,8 @@ public class Add_Todo_Form extends DialogFragment {
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
         });
     }
 
@@ -83,14 +87,26 @@ public class Add_Todo_Form extends DialogFragment {
     private void formSubmit(View view) {
         String formTitle = Objects.requireNonNull(((TextInputEditText) view.findViewById(R.id.form_title)).getText()).toString();
         String formContent = Objects.requireNonNull(((TextInputEditText) view.findViewById(R.id.form_content)).getText()).toString();
-        long selectedDateMillis = ((CalendarView) view.findViewById(R.id.form_calendar_view)).getDate();
+        Log.i("information", "formSubmit: " + formContent);
 
-        Calendar selectedDate = Calendar.getInstance();
-        selectedDate.setTimeInMillis(selectedDateMillis);
-        String formattedDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(selectedDate.getTime());
-
-        if(formTitle.isEmpty()) {
+        if (formTitle == null || formTitle.trim().isEmpty()) {
             Toast.makeText(context, "빈 제목은 지정할 수 없습니다", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        CalendarView calendarView = view.findViewById(R.id.form_calendar_view);//캘린더뷰
+        Calendar calendar = Calendar.getInstance();
+        Date date = new Date(calendarView.getDate());
+        calendar.setTime(date);
+
+        Calendar nowDate = Calendar.getInstance();
+        nowDate.set(Calendar.HOUR_OF_DAY, 0);
+        nowDate.set(Calendar.MINUTE, 0);
+        nowDate.set(Calendar.SECOND, 0);
+        nowDate.set(Calendar.MILLISECOND, 0);
+
+
+        if (calendar.before(nowDate)) {
+            Toast.makeText(context, "오늘 이전의 날짜는 지정할 수 없습니다", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -99,12 +115,16 @@ public class Add_Todo_Form extends DialogFragment {
         vo.setContent(formContent);
         vo.setPriority(priority);
         vo.setDone(0);
-        vo.setDate(formattedDate);
+        vo.setDate(calendar.get(Calendar.YEAR) + "-" + (calendar.get(Calendar.MONTH) + 1) + "-" + calendar.get(Calendar.DAY_OF_MONTH));
+        Log.e("information", "formSubmit: " + vo.getDate());
 
         try (SQLiteDatabase db = new SQLiteHelper(context).getWritableDatabase()) {
             String sql = "INSERT INTO todo (title, content, date, time, priority, done) VALUES (?, ?, ?, 'time', ?, ?)";
             db.execSQL(sql, new String[]{vo.getTitle(), vo.getContent(), vo.getDate(), String.valueOf(vo.getPriority()), String.valueOf(vo.getDone())});
+        } catch (SQLException e) {
+            Log.e("error", "formSubmit: ", e);
         }
+
         MainActivity.pageVO.setTotalPage(MainActivity.pageVO.getTotalPage() + 1);
         this.dismiss();
     }

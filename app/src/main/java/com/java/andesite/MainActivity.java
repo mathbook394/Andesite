@@ -112,14 +112,14 @@ public class MainActivity extends AppCompatActivity implements TodoOnClick, Main
 
     @Override
     public void onSwipeLeft() {
-        if (pageVO.getTotalPage() < pageVO.getNowPage() * 5) {
+        if (pageVO.getTotalPage() <= pageVO.getNowPage() * 5) {
             Toast.makeText(this, "마지막 페이지입니다", Toast.LENGTH_SHORT).show();
         } else {
             pageVO.setNowPage(pageVO.getNowPage() + 1);
             Log.e("information", "nowPage: "+String.valueOf(pageVO.getNowPage()));
             loadTodoList(pageVO.getNowPage());
         }
-        Log.e("information", "totalPage: "+String.valueOf(pageVO.getTotalPage()));
+        Log.e("information", "totalPage: "+pageVO.getTotalPage());
     }
     //====================================================================================
 

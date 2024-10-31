@@ -94,6 +94,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             }
             db.close();
         }
+        Log.e("information", "result: "+String.valueOf(result));
         MainActivity.pageVO.setTotalPage(result);
     }
     public int getTodoList_sort_count_arranged() {
@@ -137,8 +138,9 @@ public class SQLiteHelper extends SQLiteOpenHelper {
                         " WHERE done = " + done_sort +
                         " ORDER BY " + orderBy + " LIMIT "+MainActivity.pageVO.getNumPerPage()+" OFFSET ?";
             }
+            Log.e("information", "getTodoList_sort: "+sql);
 
-            cursor = db.rawQuery(sql, new String[]{String.valueOf(MainActivity.pageVO.getNumPerPage())});
+            cursor = db.rawQuery(sql, new String[]{String.valueOf((MainActivity.pageVO.getNowPage() -1) * 5)});
 
             if (cursor.moveToFirst()) {
                 do {
