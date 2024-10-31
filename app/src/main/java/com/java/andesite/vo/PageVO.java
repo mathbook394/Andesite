@@ -2,27 +2,51 @@ package com.java.andesite.vo;
 
 public class PageVO {
     private int nowPage;
-    private int nowBlock;
     private int totalRecord;
     private int numPerPage;
-    private int pagePerBlock;
     private int totalPage;
-    private int totalBlock;
     private int beginPerPage;
     private int endPerPage;
-
+    private String dateOrder;
+    private int doneOrder;
+    private String priorityOrder;
     public PageVO() {
         this.nowPage = 1;
         this.numPerPage = 5;
+        this.dateOrder = "";
+        this.doneOrder = 0;
+        this.priorityOrder = "";
+    }
+
+    public String getDateOrder() {
+        return dateOrder;
+    }
+
+    public void setDateOrder(String dateOrder) {
+        this.dateOrder = dateOrder;
+    }
+
+    public int getDoneOrder() {
+        return doneOrder;
+    }
+
+    public void setDoneOrder(int doneOrder) {
+        this.doneOrder = doneOrder;
+    }
+
+    public String getPriorityOrder() {
+        return priorityOrder;
+    }
+
+    public void setPriorityOrder(String priorityOrder) {
+        this.priorityOrder = priorityOrder;
     }
 
     public int getNowPage() {
         return nowPage;
     }
 
-    public int getNowBlock() {
-        return nowBlock;
-    }
+
 
     public int getTotalRecord() {
         return totalRecord;
@@ -32,17 +56,13 @@ public class PageVO {
         return numPerPage;
     }
 
-    public int getPagePerBlock() {
-        return pagePerBlock;
-    }
+
 
     public int getTotalPage() {
         return totalPage;
     }
 
-    public int getTotalBlock() {
-        return totalBlock;
-    }
+
 
     public int getBeginPerPage() {
         return beginPerPage;
@@ -60,9 +80,6 @@ public class PageVO {
         this.nowPage = nowPage;
     }
 
-    public void setNowBlock(int nowBlock) {
-        this.nowBlock = nowBlock;
-    }
 
     public void setTotalRecord(int totalRecord) {
         this.totalRecord = totalRecord;
@@ -72,17 +89,11 @@ public class PageVO {
         this.numPerPage = numPerPage;
     }
 
-    public void setPagePerBlock(int pagePerBlock) {
-        this.pagePerBlock = pagePerBlock;
-    }
 
     public void setTotalPage(int totalPage) {
         this.totalPage = totalPage;
     }
 
-    public void setTotalBlock(int totalBlock) {
-        this.totalBlock = totalBlock;
-    }
 
     public void setBeginPerPage(int beginPerPage) {
         this.beginPerPage = beginPerPage;

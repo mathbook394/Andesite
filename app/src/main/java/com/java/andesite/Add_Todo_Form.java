@@ -29,7 +29,6 @@ import java.util.Objects;
 
 public class Add_Todo_Form extends DialogFragment {
     private Context context;
-    private Dialog dialog;
     private Runnable onDismissListener;
     private int priority;
 

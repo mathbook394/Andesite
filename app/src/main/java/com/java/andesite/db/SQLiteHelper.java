@@ -74,16 +74,14 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         return list;
     }
 
-    public void getTodoList_sort_count(String date_sort, String priority_sort, String done_sort) {
+    public void getTodoList_sort_count(int done_sort) {
         int result = 0;
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = null;
 
         try {
-            String orderBy = buildOrderByClause(date_sort, priority_sort, done_sort);
             String sql = "SELECT COUNT(*) FROM " + TABLE_TODO +
-                    " WHERE done = " + (done_sort.equalsIgnoreCase("done") ? "1" : "0") +
-                    " ORDER BY " + orderBy;
+                    " WHERE done = " + done_sort;
             cursor = db.rawQuery(sql, null);
             while(cursor.moveToNext()) {
                 result = cursor.getInt(0);
@@ -122,25 +120,25 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         }
         return result;
     }
-    public ArrayList<TodoVO> getTodoList_sort(int num, String date_sort, String priority_sort, String done_sort, int isDone_arrange) {
+    public ArrayList<TodoVO> getTodoList_sort(int num, String date_sort, String priority_sort, int done_sort, int isDone_arrange) {
         ArrayList<TodoVO> result = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = null;
 
         try {
-            String orderBy = buildOrderByClause(date_sort, priority_sort, done_sort);
+            String orderBy = buildOrderByClause(date_sort, priority_sort);
             int offset = (num - 1) * 5;
             String sql;
             if(isDone_arrange == -2) {
                 sql = "SELECT id, title, content, date, time, priority, done FROM " + TABLE_TODO +
-                        " ORDER BY " + orderBy + " LIMIT 5 OFFSET ?";
+                        " ORDER BY " + orderBy + " LIMIT "+MainActivity.pageVO.getNumPerPage()+" OFFSET ?";
             } else {
                 sql = "SELECT id, title, content, date, time, priority, done FROM " + TABLE_TODO +
-                        " WHERE done = " + (done_sort.equalsIgnoreCase("done") ? "1" : "0") +
-                        " ORDER BY " + orderBy + " LIMIT 5 OFFSET ?";
+                        " WHERE done = " + done_sort +
+                        " ORDER BY " + orderBy + " LIMIT "+MainActivity.pageVO.getNumPerPage()+" OFFSET ?";
             }
 
-            cursor = db.rawQuery(sql, new String[]{String.valueOf(offset)});
+            cursor = db.rawQuery(sql, new String[]{String.valueOf(MainActivity.pageVO.getNumPerPage())});
 
             if (cursor.moveToFirst()) {
                 do {
@@ -173,7 +171,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         return result;
     }
 
-    private String buildOrderByClause(String date_sort, String priority_sort, String done_sort) {
+    private String buildOrderByClause(String date_sort, String priority_sort) {
         StringBuilder orderBy = new StringBuilder();
         if (!date_sort.isEmpty()) {
             orderBy.append("date ").append(date_sort.equalsIgnoreCase("asc") ? "ASC" : "DESC");
@@ -181,10 +179,6 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         if (!priority_sort.isEmpty()) {
             if (orderBy.length() > 0) orderBy.append(", ");
             orderBy.append("priority ").append("DESC");
-        }
-        if (!done_sort.isEmpty()) {
-            if (orderBy.length() > 0) orderBy.append(", ");
-            orderBy.append("done ").append(done_sort.equalsIgnoreCase("done") ? "ASC" : "DESC");
         }
         return orderBy.toString();
     }

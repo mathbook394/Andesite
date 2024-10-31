@@ -41,9 +41,7 @@ public class MainActivity extends AppCompatActivity implements TodoOnClick, Main
     private GestureDetector gestureDetector;
     private ArrayList<TodoVO> list;
     private String[] ids = {"0", "0", "0", "0", "0"};
-    private String dateOrder = "";
-    private String doneOrder = "";
-    private int isDone_arrange = 0;
+    private int isDone_arrange = 0; //완료 한거 가져오려면 0, 아니면 -2
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,7 +57,7 @@ public class MainActivity extends AppCompatActivity implements TodoOnClick, Main
         sqLiteHelper = new SQLiteHelper(this);
 
         pageVO = new PageVO();
-        sqLiteHelper.getTodoList_sort_count(dateOrder, "desc", doneOrder);
+        sqLiteHelper.getTodoList_sort_count(pageVO.getDoneOrder());
 
         loadTodoList(pageVO.getNowPage());
         title_mainOnCreate();
@@ -74,7 +72,7 @@ public class MainActivity extends AppCompatActivity implements TodoOnClick, Main
         swipeView.setOnTouchListener((v, event) -> gestureDetector.onTouchEvent(event));
         myDialogFragment.setOnDismissListener(() -> {
             loadTodoList(pageVO.getNowPage());
-            sqLiteHelper.getTodoList_sort_count(dateOrder, "desc", doneOrder);
+            sqLiteHelper.getTodoList_sort_count(pageVO.getDoneOrder());
         });
     }
     //====================================================================================
@@ -114,18 +112,19 @@ public class MainActivity extends AppCompatActivity implements TodoOnClick, Main
 
     @Override
     public void onSwipeLeft() {
-        if (pageVO.getTotalPage() <= pageVO.getNowPage() * 5) {
+        if (pageVO.getTotalPage() < pageVO.getNowPage() * 5) {
             Toast.makeText(this, "마지막 페이지입니다", Toast.LENGTH_SHORT).show();
         } else {
             pageVO.setNowPage(pageVO.getNowPage() + 1);
-            Log.e("information", String.valueOf(pageVO.getNowPage()));
+            Log.e("information", "nowPage: "+String.valueOf(pageVO.getNowPage()));
             loadTodoList(pageVO.getNowPage());
         }
+        Log.e("information", "totalPage: "+String.valueOf(pageVO.getTotalPage()));
     }
     //====================================================================================
 
     private void loadTodoList(int pageNum) {
-        list = sqLiteHelper.getTodoList_sort(pageNum, dateOrder, "desc", doneOrder, isDone_arrange);
+        list = sqLiteHelper.getTodoList_sort(pageNum, pageVO.getDateOrder(), "desc", pageVO.getDoneOrder(), isDone_arrange);
         updateTodoList(list);
     }
 
@@ -167,9 +166,9 @@ public class MainActivity extends AppCompatActivity implements TodoOnClick, Main
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
                 pageVO.setNowPage(1);
-                dateOrder = position == 0 ? "asc" : "desc";
+                pageVO.setDateOrder(position == 0 ? "asc" : "desc");
                 loadTodoList(pageVO.getNowPage());
-                sqLiteHelper.getTodoList_sort_count(dateOrder, "desc", doneOrder);
+                sqLiteHelper.getTodoList_sort_count(pageVO.getDoneOrder());
             }
 
             @Override
@@ -229,13 +228,13 @@ public class MainActivity extends AppCompatActivity implements TodoOnClick, Main
         sqLiteHelper.setDone(todoId, checkBox.isChecked() ? 1 : 0);
         pageVO.setNowPage(1);
         loadTodoList(pageVO.getNowPage());
-        sqLiteHelper.getTodoList_sort_count(dateOrder, "desc", doneOrder);
+        sqLiteHelper.getTodoList_sort_count(pageVO.getDoneOrder());
     }
 
     @Override
     public void done_arrange_mainCheckBoxOnClick(View view) {
         CheckBox checkBox = (CheckBox) view;
-        doneOrder = checkBox.isChecked() ? "done" : "notdone";
+        pageVO.setDoneOrder(checkBox.isChecked() ? 1 : 0);
         Log.e("error", "done_arrange_mainCheckBoxOnClick: "+checkBox.isChecked());
         isDone_arrange = checkBox.isChecked() ? -2 : 0;
 
